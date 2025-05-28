@@ -18,6 +18,7 @@ package rti
 // #include "rticonnextdds-connector.h"
 // #include <stdlib.h>
 // #include "helper/guid_helper.h"
+// #include "helper/guid_helper.c"
 import "C"
 import (
 	"encoding/json"

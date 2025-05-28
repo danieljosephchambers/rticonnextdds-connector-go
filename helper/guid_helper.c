@@ -13,7 +13,7 @@ int GetGuidBytesFromSample(
     for (int i = 0; i < 16; ++i) {
         snprintf(fieldName, sizeof(fieldName), "%s[%d]", baseFieldName, i + 1);
         double val = 0;
-        int retcode = RTI_Connector_get_number_from_sample(nativeConnector, &val, inputName, sampleIndex, fieldName);
+        int retcode = RTI_Connector_get_number_from_sample(connector, &val, inputName, sampleIndex, fieldName);
         if (retcode != 0) {
             return retcode;
         }
