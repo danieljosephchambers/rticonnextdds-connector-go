@@ -17,10 +17,14 @@ package rti
 // #cgo linux,arm LDFLAGS: -L${SRCDIR}/rticonnextdds-connector/lib/armv6vfphLinux3.xgcc4.7.2 -lrtiddsconnector -ldl -lnsl -lm -lpthread -lrt
 // #include "rticonnextdds-connector.h"
 // #include <stdlib.h>
+// #include "helper/guid_helper.h"
 import "C"
 import (
 	"encoding/json"
+	"fmt"
 	"unsafe"
+
+	"github.com/google/uuid"
 )
 
 /********
@@ -208,4 +212,41 @@ func (samples *Samples) Get(index int, v interface{}) error {
 	}
 
 	return json.Unmarshal(jsonData, &v)
+}
+
+func (samples *Samples) GetGuidString(index int, fieldName string) (string, error) {
+	guid, err := samples.getGuidBytes(samples.input.name, index, fieldName)
+	if err != nil {
+		return "", err
+	}
+
+	return uuid.Must(uuid.FromBytes(guid[:])).String(), nil
+}
+
+func (samples *Samples) getGuidBytes(
+	inputName string,
+	sampleIndex int,
+	baseFieldName string,
+) ([16]byte, error) {
+	var guid [16]byte
+
+	inputNameC := C.CString(inputName)
+	defer C.free(unsafe.Pointer(inputNameC))
+
+	baseFieldNameC := C.CString(baseFieldName)
+	defer C.free(unsafe.Pointer(baseFieldNameC))
+
+	ret := C.GetGuidBytesFromSample(
+		samples.input.connector.native,
+		inputNameC,
+		C.int(sampleIndex),
+		baseFieldNameC,
+		(*C.uchar)(unsafe.Pointer(&guid[0])),
+	)
+
+	if ret != 0 {
+		return guid, fmt.Errorf("GetGuidBytesFromSample failed with retcode %d", int(ret))
+	}
+
+	return guid, nil
 }
